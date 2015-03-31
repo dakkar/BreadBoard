@@ -2,6 +2,7 @@ package Bread::Board::Service::WithParameters;
 use Moose::Role;
 use MooseX::Params::Validate qw(validated_hash);
 
+use Try::Tiny;
 use Bread::Board::Types;
 
 with 'Bread::Board::Service';
@@ -18,25 +19,23 @@ has 'parameters' => (
     }
 );
 
-has '_parameter_keys_to_remove' => (
-    is        => 'rw',
-    isa       => 'ArrayRef',
-    clearer   => '_clear_parameter_keys_to_remove',
-    predicate => '_has_parameter_keys_to_remove',
-);
-
-before 'get' => sub {
+around 'get' => sub {
+    my $next = shift;
     my $self = shift;
-    my %params = $self->check_parameters(@_);
-    $self->_parameter_keys_to_remove( [ keys %params ] );
+    my @args = @_;
+    my %params = $self->check_parameters(@args);
+    my @parameter_keys_to_remove = keys %params;
     $self->params({ %{ $self->params }, %params });
-};
 
-after 'get' => sub {
-    my $self = shift;
-    return unless $self->_has_parameter_keys_to_remove;
-    map { $self->_clear_param( $_ ) } @{ $self->_parameter_keys_to_remove };
-    $self->_clear_parameter_keys_to_remove;
+    try {
+        $self->$next(@args);
+    }
+    catch {
+        die $_;
+    }
+    finally {
+        $self->_clear_param( $_ ) foreach @parameter_keys_to_remove;
+    };
 };
 
 sub _build_parameters { +{} }

@@ -35,7 +35,15 @@ around 'init_params' => sub {
     +{ %{ $self->$next() }, $self->resolve_dependencies }
 };
 
-after 'get' => sub { (shift)->clear_params };
+around 'get' => sub {
+    my $next = shift;
+    my $self = shift;
+    my @args = @_;
+
+    try { $self->$next(@args) }
+    catch { die $_ }
+    finally { $self->clear_params };
+};
 
 sub resolve_dependencies {
     my $self = shift;
