@@ -92,9 +92,9 @@ $s->flush_instance;
 }
 
 $s->lifecycle('Singleton');
-ok($s->can('flush_instance'), '... we can no longer call flush_instance');
-ok($s->can('instance'), '... we can no longer call instance');
-ok($s->can('has_instance'), '... we can no longer call has_instance');
+ok($s->can('flush_instance'), '... we can again call flush_instance');
+ok($s->can('instance'), '... we can again call instance');
+ok($s->can('has_instance'), '... we can again call has_instance');
 
 is($s->lifecycle, 'Singleton', '... got the right lifecycle');
 
@@ -106,6 +106,23 @@ is($s->lifecycle, 'Singleton', '... got the right lifecycle');
         my $i2a = $s->get(stash => Mexican::Black::Tar->new);
         is($i2, $i2a, '... calling it again returns the same object');
     }
+}
+
+$s->flush_instance;
+
+{
+
+    $s->lifecycle('Prototype');
+    ok(!$s->can('flush_instance'), '... we can no longer call flush_instance');
+    ok(!$s->can('instance'), '... we can no longer call instance');
+    ok(!$s->can('has_instance'), '... we can no longer call has_instance');
+
+    is($s->lifecycle, 'Prototype', '... got the right lifecycle');
+
+    my $i = $s->get(stash => Mexican::Black::Tar->new);
+
+    my $i2 = $s->get(stash => Mexican::Black::Tar->new);
+    isnt($i, $i2, '... calling get again returns a new object');
 }
 
 done_testing;

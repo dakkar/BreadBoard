@@ -41,8 +41,8 @@ has 'lifecycle' => (
         if ($self->does('Bread::Board::LifeCycle')) {
             my $base = (Class::MOP::class_of($self)->superclasses)[0];
             Class::MOP::class_of($base)->rebless_instance_back($self);
-            return if $lifecycle eq 'Null';
         }
+        return if $lifecycle eq 'Null';
 
         my $lifecycle_role = $lifecycle =~ /^\+/
                  ? substr($lifecycle, 1)
